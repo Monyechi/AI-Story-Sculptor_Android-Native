@@ -22,10 +22,12 @@ import androidx.navigation.navArgument
 import com.monyechi.aistorysculptor.ui.screen.auth.LoginScreen
 import com.monyechi.aistorysculptor.ui.screen.auth.RegisterScreen
 import com.monyechi.aistorysculptor.ui.screen.create.CreateBookScreen
+import com.monyechi.aistorysculptor.ui.screen.details.ChapterReaderScreen
 import com.monyechi.aistorysculptor.ui.screen.details.BookDetailsScreen
 import com.monyechi.aistorysculptor.ui.screen.library.LibraryScreen
 import com.monyechi.aistorysculptor.ui.viewmodel.AuthViewModel
 import com.monyechi.aistorysculptor.ui.viewmodel.BookDetailsViewModel
+import com.monyechi.aistorysculptor.ui.viewmodel.ChapterReaderViewModel
 import com.monyechi.aistorysculptor.ui.viewmodel.CreateBookViewModel
 import com.monyechi.aistorysculptor.ui.viewmodel.LibraryViewModel
 import com.monyechi.aistorysculptor.ui.viewmodel.SessionViewModel
@@ -136,7 +138,28 @@ fun AppNavHost(
                 BookDetailsScreen(
                     bookId = bookId,
                     viewModel = bookDetailsViewModel,
+                    onReadChapter = { chapterId ->
+                        navController.navigate(Route.ChapterReader.withIds(bookId, chapterId))
+                    },
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Route.ChapterReader.value,
+                arguments = listOf(
+                    navArgument("bookId") { type = NavType.LongType },
+                    navArgument("chapterId") { type = NavType.LongType },
+                )
+            ) {
+                val bookId = it.arguments?.getLong("bookId") ?: 0L
+                val chapterId = it.arguments?.getLong("chapterId") ?: 0L
+                val chapterReaderViewModel: ChapterReaderViewModel = hiltViewModel()
+                ChapterReaderScreen(
+                    bookId = bookId,
+                    chapterId = chapterId,
+                    viewModel = chapterReaderViewModel,
+                    onBack = { navController.popBackStack() },
                 )
             }
         }

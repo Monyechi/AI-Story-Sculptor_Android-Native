@@ -9,6 +9,7 @@ import com.monyechi.aistorysculptor.data.db.ChapterDao
 import com.monyechi.aistorysculptor.data.db.ChapterEntity
 import com.monyechi.aistorysculptor.data.db.CharacterDao
 import com.monyechi.aistorysculptor.data.db.CharacterEntity
+import com.monyechi.aistorysculptor.data.db.UserDao
 import com.monyechi.aistorysculptor.data.generation.ChapterRenderer
 import com.monyechi.aistorysculptor.data.generation.ContentGenerator
 import com.monyechi.aistorysculptor.domain.common.AppResult
@@ -36,6 +37,7 @@ class BookRepositoryImpl @Inject constructor(
     private val bookDao: BookDao,
     private val chapterDao: ChapterDao,
     private val characterDao: CharacterDao,
+    private val userDao: UserDao,
     private val chapterRenderer: ChapterRenderer,
     private val contentGenerator: ContentGenerator,
 ) : BookRepository {
@@ -101,6 +103,11 @@ class BookRepositoryImpl @Inject constructor(
         return try {
             val book = bookDao.getBookById(bookId)
                 ?: return AppResult.Failure("Book not found")
+            val tokenCost = BookConstants.TOKEN_COST_GENERATE_SUMMARY
+            when (val tokenResult = chargeTokens(book.userId, tokenCost, "generate summary")) {
+                is AppResult.Failure -> return tokenResult
+                is AppResult.Success -> Unit
+            }
             val summary = contentGenerator.generateBookSummary(book)
             bookDao.updateSummary(bookId, summary)
             AppResult.Success(summary)
@@ -148,6 +155,11 @@ class BookRepositoryImpl @Inject constructor(
         return try {
             val book = bookDao.getBookById(bookId)
                 ?: return AppResult.Failure("Book not found")
+            val tokenCost = BookConstants.TOKEN_COST_AUTO_GENERATE_CHAPTERS * count.coerceAtLeast(0)
+            when (val tokenResult = chargeTokens(book.userId, tokenCost, "auto-generate chapter metadata")) {
+                is AppResult.Failure -> return tokenResult
+                is AppResult.Success -> Unit
+            }
             val generated = mutableListOf<Chapter>()
 
             var lastSummary: String? = chapterDao.getChaptersByBook(bookId)
@@ -195,6 +207,11 @@ class BookRepositoryImpl @Inject constructor(
                 ?: return AppResult.Failure("Chapter not found")
             val book = bookDao.getBookById(chapter.bookId)
                 ?: return AppResult.Failure("Book not found")
+            val tokenCost = BookConstants.TOKEN_COST_GENERATE_SUMMARY
+            when (val tokenResult = chargeTokens(book.userId, tokenCost, "generate chapter summary")) {
+                is AppResult.Failure -> return tokenResult
+                is AppResult.Success -> Unit
+            }
             val summary = contentGenerator.generateChapterSummary(book, chapter)
             chapterDao.update(chapter.copy(summary = summary))
             AppResult.Success(summary)
@@ -209,6 +226,11 @@ class BookRepositoryImpl @Inject constructor(
                 ?: return AppResult.Failure("Book not found")
             val chapter = chapterDao.getChapterById(chapterId)
                 ?: return AppResult.Failure("Chapter not found")
+            val tokenCost = BookConstants.chapterRenderTokenCost(book.bookType, chapter.desiredWordCount)
+            when (val tokenResult = chargeTokens(book.userId, tokenCost, "render chapter")) {
+                is AppResult.Failure -> return tokenResult
+                is AppResult.Success -> Unit
+            }
 
             bookDao.setRenderingFlag(bookId, true)
             try {
@@ -242,9 +264,20 @@ class BookRepositoryImpl @Inject constructor(
         val unrendered = chapterDao.getUnrenderedChapters(bookId)
         val total = unrendered.size
 
+        if (total == 0) {
+            emit(RenderProgress(0, 0, message = "No unrendered chapters."))
+            return@flow
+        }
+
         bookDao.setRenderingFlag(bookId, true)
         try {
             unrendered.forEachIndexed { index, chapter ->
+                val tokenCost = BookConstants.chapterRenderTokenCost(book.bookType, chapter.desiredWordCount)
+                when (val tokenResult = chargeTokens(book.userId, tokenCost, "render chapter")) {
+                    is AppResult.Failure -> throw IllegalStateException(tokenResult.message)
+                    is AppResult.Success -> Unit
+                }
+
                 emit(RenderProgress(index + 1, total, message = "Rendering: ${chapter.title}"))
 
                 val text = chapterRenderer.renderChapter(book, chapter)
@@ -303,6 +336,11 @@ class BookRepositoryImpl @Inject constructor(
         return try {
             val book = bookDao.getBookById(bookId)
                 ?: return AppResult.Failure("Book not found")
+            val tokenCost = BookConstants.TOKEN_COST_GENERATE_CHARACTER
+            when (val tokenResult = chargeTokens(book.userId, tokenCost, "generate character")) {
+                is AppResult.Failure -> return tokenResult
+                is AppResult.Success -> Unit
+            }
             val entity = contentGenerator.generateCharacter(book)
                 ?: return AppResult.Failure("AI could not generate a character")
             val id = characterDao.insert(entity)
@@ -328,6 +366,11 @@ class BookRepositoryImpl @Inject constructor(
         return try {
             val book = bookDao.getBookById(bookId)
                 ?: return AppResult.Failure("Book not found")
+            val tokenCost = if (book.tokenChargeForImage > 0) book.tokenChargeForImage else BookConstants.TOKEN_COST_COVER_ART
+            when (val tokenResult = chargeTokens(book.userId, tokenCost, "generate cover art")) {
+                is AppResult.Failure -> return tokenResult
+                is AppResult.Success -> Unit
+            }
             val b64 = contentGenerator.generateCoverArt(book, userDescription)
                 ?: return AppResult.Failure("Cover art generation failed")
             AppResult.Success(b64)
@@ -412,4 +455,23 @@ class BookRepositoryImpl @Inject constructor(
         bio = bio,
         role = role,
     )
+
+    private suspend fun chargeTokens(userId: Long, amount: Int, action: String): AppResult<Unit> {
+        if (amount <= 0) return AppResult.Success(Unit)
+
+        val balance = userDao.getTokenBalance(userId)
+            ?: return AppResult.Failure("User not found")
+
+        if (balance < amount) {
+            return AppResult.Failure("Not enough tokens to $action. Need $amount, have $balance.")
+        }
+
+        val affectedRows = userDao.subtractTokens(userId, amount)
+        return if (affectedRows > 0) {
+            AppResult.Success(Unit)
+        } else {
+            val latestBalance = userDao.getTokenBalance(userId) ?: 0
+            AppResult.Failure("Not enough tokens to $action. Need $amount, have $latestBalance.")
+        }
+    }
 }

@@ -28,13 +28,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.monyechi.aistorysculptor.ui.common.UiState
 import com.monyechi.aistorysculptor.ui.viewmodel.BookDetailsViewModel
+import java.io.File
 
 @Composable
 fun BookDetailsScreen(
     bookId: Long,
     viewModel: BookDetailsViewModel,
+    onReadChapter: (Long) -> Unit,
     onBack: () -> Unit,
 ) {
     val detailsState by viewModel.detailsState.collectAsStateWithLifecycle()
@@ -94,6 +97,16 @@ fun BookDetailsScreen(
                         Spacer(Modifier.height(4.dp))
                         Text("${book.bookType} • ${book.genre}", style = MaterialTheme.typography.bodyMedium)
                         Text("Language: ${book.language} • POV: ${book.pov}", style = MaterialTheme.typography.bodySmall)
+                        book.coverArtPath?.let { path ->
+                            Spacer(Modifier.height(8.dp))
+                            AsyncImage(
+                                model = File(path),
+                                contentDescription = "Cover art",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(220.dp),
+                            )
+                        }
                         if (book.summary.isNotBlank()) {
                             Spacer(Modifier.height(8.dp))
                             Text(book.summary, style = MaterialTheme.typography.bodyMedium)
@@ -163,6 +176,10 @@ fun BookDetailsScreen(
                                             enabled = !isBusy,
                                             onClick = { viewModel.renderChapter(bookId, chapter.id) },
                                         ) { Text("Render") }
+                                    } else {
+                                        OutlinedButton(
+                                            onClick = { onReadChapter(chapter.id) },
+                                        ) { Text("Read") }
                                     }
                                     OutlinedButton(onClick = { viewModel.deleteChapter(bookId, chapter.id) }) { Text("Delete") }
                                 }
