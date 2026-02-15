@@ -68,7 +68,7 @@ class BookRepositoryImpl @Inject constructor(
             AppResult.Success(
                 GenerationStatus(
                     jobId = response.jobId,
-                    status = response.status,
+                    status = response.state,
                     bookId = response.bookId,
                     message = response.message
                 )
@@ -97,17 +97,11 @@ class BookRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getDownloadUrl(bookId: String): AppResult<String> {
-        return when (val result = getBookDetails(bookId)) {
-            is AppResult.Success -> {
-                val downloadUrl = result.data.downloadUrl
-                if (downloadUrl.isNullOrBlank()) {
-                    AppResult.Failure("Download URL unavailable")
-                } else {
-                    AppResult.Success(downloadUrl)
-                }
-            }
-
-            is AppResult.Failure -> AppResult.Failure(result.message, result.throwable)
+        return try {
+            val response = bookApi.getBookDownload(bookId = bookId, format = "pdf")
+            AppResult.Success(response.url)
+        } catch (t: Throwable) {
+            AppResult.Failure(t.message ?: "Download URL unavailable", t)
         }
     }
 
@@ -124,7 +118,7 @@ class BookRepositoryImpl @Inject constructor(
     private fun GenerationStatusDto.toDomain(): GenerationStatus {
         return GenerationStatus(
             jobId = jobId,
-            status = status,
+            status = state,
             bookId = bookId,
             progress = progress,
             message = message

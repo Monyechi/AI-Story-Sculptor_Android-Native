@@ -4,32 +4,39 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface AuthApi {
-    @POST("api/auth/login/")
+    @POST("api/v1/mobile/auth/login/")
     suspend fun login(@Body request: LoginRequestDto): AuthResponseDto
 
-    @POST("api/auth/register/")
+    @POST("api/v1/mobile/auth/register/")
     suspend fun register(@Body request: RegisterRequestDto): AuthResponseDto
 
-    @POST("api/auth/refresh/")
+    @POST("api/v1/mobile/auth/refresh/")
     suspend fun refreshToken(@Body request: RefreshTokenRequestDto): AuthResponseDto
 
-    // TODO: Replace endpoint paths above with exact Django endpoints.
+    // TODO: Implement token-based auth endpoints in backend (DRF suggested).
 }
 
 interface BookApi {
-    @GET("api/books/")
+    @GET("api/v1/mobile/books/")
     suspend fun getBooks(): BookListResponseDto
 
-    @POST("api/books/create/")
+    @POST("api/v1/mobile/books/")
     suspend fun createBook(@Body request: CreateBookRequestDto): CreateBookResponseDto
 
-    @GET("api/books/generation/{jobId}/")
+    @GET("api/v1/mobile/jobs/{jobId}/")
     suspend fun getGenerationStatus(@Path("jobId") jobId: String): GenerationStatusDto
 
-    @GET("api/books/{bookId}/")
+    @GET("api/v1/mobile/books/{bookId}/")
     suspend fun getBookDetails(@Path("bookId") bookId: String): BookDetailsDto
 
-    // TODO: Verify exact path naming and trailing slash conventions with Django URLs.
+    @GET("api/v1/mobile/books/{bookId}/download/")
+    suspend fun getBookDownload(
+        @Path("bookId") bookId: String,
+        @Query("format") format: String = "pdf"
+    ): DownloadLinkDto
+
+    // TODO: Confirm final mobile route names and auth policy in backend implementation.
 }

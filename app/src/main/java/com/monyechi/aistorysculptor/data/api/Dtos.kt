@@ -11,9 +11,11 @@ data class LoginRequestDto(
 
 @Serializable
 data class RegisterRequestDto(
+    @SerialName("username") val username: String,
     @SerialName("email") val email: String,
     @SerialName("password") val password: String,
-    @SerialName("display_name") val displayName: String
+    @SerialName("display_name") val displayName: String,
+    @SerialName("agree_terms") val agreeTerms: Boolean = true
 )
 
 @Serializable
@@ -24,8 +26,15 @@ data class RefreshTokenRequestDto(
 @Serializable
 data class AuthResponseDto(
     @SerialName("access_token") val accessToken: String,
-    @SerialName("refresh_token") val refreshToken: String
-    // TODO: Add user payload mapping from backend response if returned.
+    @SerialName("refresh_token") val refreshToken: String,
+    @SerialName("user") val user: UserProfileDto? = null
+)
+
+@Serializable
+data class UserProfileDto(
+    @SerialName("id") val id: String,
+    @SerialName("email") val email: String,
+    @SerialName("display_name") val displayName: String? = null
 )
 
 @Serializable
@@ -40,24 +49,28 @@ data class BookDto(
 
 @Serializable
 data class BookListResponseDto(
-    @SerialName("results") val books: List<BookDto>
-    // TODO: If API returns {"books": [...]}, rename this mapping.
+    @SerialName("items") val books: List<BookDto>
 )
 
 @Serializable
 data class CreateBookRequestDto(
+    @SerialName("title") val title: String,
+    @SerialName("author") val author: String,
+    @SerialName("book_type") val bookType: String,
     @SerialName("genre") val genre: String,
-    @SerialName("age_group") val ageGroup: String,
+    @SerialName("language") val language: String,
+    @SerialName("pov") val pov: String,
+    @SerialName("writing_style") val writingStyle: String,
+    @SerialName("summary") val summary: String,
     @SerialName("character_name") val characterName: String,
-    @SerialName("character_description") val characterDescription: String,
-    @SerialName("story_outline") val storyOutline: String
-    // TODO: Replace fields if your backend expects different creation payload keys.
+    @SerialName("character_description") val characterDescription: String
+    // TODO: Finalize creation payload with backend serializer.
 )
 
 @Serializable
 data class CreateBookResponseDto(
     @SerialName("job_id") val jobId: String,
-    @SerialName("status") val status: String,
+    @SerialName("state") val state: String,
     @SerialName("book_id") val bookId: String? = null,
     @SerialName("message") val message: String? = null
 )
@@ -65,9 +78,9 @@ data class CreateBookResponseDto(
 @Serializable
 data class GenerationStatusDto(
     @SerialName("job_id") val jobId: String,
-    @SerialName("status") val status: String,
+    @SerialName("state") val state: String,
     @SerialName("book_id") val bookId: String? = null,
-    @SerialName("progress") val progress: Int? = null,
+    @SerialName("progress_percent") val progress: Int? = null,
     @SerialName("message") val message: String? = null
 )
 
@@ -87,6 +100,15 @@ data class BookDetailsDto(
     @SerialName("status") val status: String,
     @SerialName("chapters") val chapters: List<BookChapterDto> = emptyList(),
     @SerialName("download_url") val downloadUrl: String? = null,
-    @SerialName("share_url") val shareUrl: String? = null
-    // TODO: Align chapter and URL fields to your backend serializer response.
+    @SerialName("share_url") val shareUrl: String? = null,
+    @SerialName("author") val author: String? = null,
+    @SerialName("genre") val genre: String? = null,
+    @SerialName("language") val language: String? = null
+)
+
+@Serializable
+data class DownloadLinkDto(
+    @SerialName("url") val url: String,
+    @SerialName("format") val format: String,
+    @SerialName("expires_at") val expiresAtIso: String? = null
 )
