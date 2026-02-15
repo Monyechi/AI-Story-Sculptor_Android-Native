@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -15,38 +15,29 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_tokens")
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_session")
 
+/**
+ * Persists the current logged-in user's ID.
+ * No JWT tokens needed — auth is local.
+ */
 @Singleton
 class TokenStorage @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val accessTokenKey = stringPreferencesKey("access_token")
-    private val refreshTokenKey = stringPreferencesKey("refresh_token")
+    private val userIdKey = longPreferencesKey("current_user_id")
 
-    val accessToken: Flow<String?> = context.dataStore.data
+    val userId: Flow<Long?> = context.dataStore.data
         .catch {
             if (it is IOException) emit(emptyPreferences()) else throw it
         }
-        .map { it[accessTokenKey] }
+        .map { it[userIdKey] }
 
-    val refreshToken: Flow<String?> = context.dataStore.data
-        .catch {
-            if (it is IOException) emit(emptyPreferences()) else throw it
-        }
-        .map { it[refreshTokenKey] }
-
-    suspend fun saveTokens(accessToken: String, refreshToken: String) {
-        context.dataStore.edit {
-            it[accessTokenKey] = accessToken
-            it[refreshTokenKey] = refreshToken
-        }
+    suspend fun saveUserId(id: Long) {
+        context.dataStore.edit { it[userIdKey] = id }
     }
 
-    suspend fun clearTokens() {
-        context.dataStore.edit {
-            it.remove(accessTokenKey)
-            it.remove(refreshTokenKey)
-        }
+    suspend fun clearAll() {
+        context.dataStore.edit { it.clear() }
     }
 }
