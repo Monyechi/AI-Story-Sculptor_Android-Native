@@ -1,2 +1,10 @@
 .env
 local.properties
+
+# Gradle and Android build outputs
+.gradle/
+**/build/
+
+# IDE files
+.idea/
+*.iml

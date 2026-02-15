@@ -191,7 +191,7 @@ class ContentGenerator @Inject constructor(
                 val lastName = obj["last_name"]?.jsonPrimitive?.content ?: ""
                 val fullName = "$firstName $lastName".trim()
 
-                if (fullName in existingNames) continue  // retry
+                if (fullName in existingNames) return@repeat  // retry
 
                 val age = obj["age"]?.jsonPrimitive?.content?.toIntOrNull()
                 val bio = obj["bio"]?.jsonPrimitive?.content
