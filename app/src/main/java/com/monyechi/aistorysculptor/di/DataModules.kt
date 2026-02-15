@@ -2,6 +2,7 @@ package com.monyechi.aistorysculptor.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.monyechi.aistorysculptor.BuildConfig
 import com.monyechi.aistorysculptor.data.api.AccessTokenInterceptor
@@ -135,6 +136,12 @@ object DatabaseModule {
 
     @Provides
     fun provideBookDao(database: AppDatabase): BookDao = database.bookDao()
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
+    }
 }
 
 @Module

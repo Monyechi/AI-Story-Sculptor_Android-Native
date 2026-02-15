@@ -2,6 +2,7 @@ package com.monyechi.aistorysculptor.ui.screen.details
 
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,12 +18,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.monyechi.aistorysculptor.data.work.DownloadBookWorker
 import com.monyechi.aistorysculptor.ui.common.UiState
 import com.monyechi.aistorysculptor.ui.viewmodel.BookDetailsViewModel
+import com.monyechi.aistorysculptor.ui.viewmodel.DownloadUiState
+import java.io.File
 
 @Composable
 fun BookDetailsScreen(
@@ -32,9 +39,17 @@ fun BookDetailsScreen(
 ) {
     val context = LocalContext.current
     val detailsState by viewModel.detailsState.collectAsStateWithLifecycle()
+    val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
+    var downloadedFilePath by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(bookId) {
         viewModel.load(bookId)
+    }
+
+    LaunchedEffect(downloadState) {
+        if (downloadState is DownloadUiState.Success) {
+            downloadedFilePath = (downloadState as DownloadUiState.Success).filePath
+        }
     }
 
     when (val state = detailsState) {
@@ -86,32 +101,62 @@ fun BookDetailsScreen(
 
                 item {
                     Button(
-                        enabled = !details.downloadUrl.isNullOrBlank(),
+                        enabled = downloadState !is DownloadUiState.InProgress,
                         onClick = {
-                            val url = details.downloadUrl.orEmpty()
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            context.startActivity(intent)
+                            viewModel.downloadBook(
+                                bookId = details.id,
+                                bookTitle = details.title,
+                                format = DownloadBookWorker.FORMAT_PDF
+                            )
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Download")
+                        Text(if (downloadState is DownloadUiState.InProgress) "Downloading..." else "Download")
                     }
                 }
 
                 item {
                     Button(
-                        enabled = !details.shareUrl.isNullOrBlank() || !details.downloadUrl.isNullOrBlank(),
+                        enabled = !downloadedFilePath.isNullOrBlank() || !details.shareUrl.isNullOrBlank() || !details.downloadUrl.isNullOrBlank(),
                         onClick = {
-                            val shareText = details.shareUrl ?: details.downloadUrl.orEmpty()
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, shareText)
+                            val localPath = downloadedFilePath
+                            if (!localPath.isNullOrBlank()) {
+                                val file = File(localPath)
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file
+                                )
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "application/pdf"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Share Book"))
+                            } else {
+                                val shareText = details.shareUrl ?: details.downloadUrl.orEmpty()
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Share Book"))
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, "Share Book"))
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Share")
+                    }
+                }
+
+                item {
+                    when (val state = downloadState) {
+                        DownloadUiState.Idle -> Unit
+                        DownloadUiState.InProgress -> Text("Download in progress...")
+                        is DownloadUiState.Success -> Text("Downloaded: ${state.filePath}")
+                        is DownloadUiState.Error -> Text(
+                            text = state.message,
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
 

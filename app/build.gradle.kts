@@ -22,6 +22,8 @@ android {
         val rawBaseUrl = (project.findProperty("BASE_URL") as String?) ?: "https://example.com/"
         val normalizedBaseUrl = if (rawBaseUrl.endsWith("/")) rawBaseUrl else "$rawBaseUrl/"
         buildConfigField("String", "BASE_URL", "\"$normalizedBaseUrl\"")
+        buildConfigField("String", "DOWNLOAD_PDF_PATH_TEMPLATE", "\"download/pdf/%s/\"")
+        buildConfigField("String", "DOWNLOAD_DOCX_PATH_TEMPLATE", "\"download/docx/%s/\"")
     }
 
     buildTypes {
@@ -88,6 +90,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.52")
     kapt("com.google.dagger:hilt-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    kapt("androidx.hilt:hilt-compiler:1.2.0")
 
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 

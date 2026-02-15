@@ -46,6 +46,24 @@ Notes:
 - Navigation: AuthFlow and MainFlow (Library/Create/Details)
 - Create flow: 4-step wizard + submit + polling every 4s for generation status
 - Details flow: metadata + chapters + download/share actions
+- WorkManager download: background PDF fetch + local file share via FileProvider
+
+## Django Route Mapping (Phase 3)
+
+Mapped legacy backend routes (in `LegacyDjangoApi`):
+
+- `login/`
+- `register/`
+- `bookshelf/`
+- `create/`
+- `book/{bookId}/details/`
+- `download/pdf/{bookId}/`
+- `download/docx/{bookId}/`
+
+Important:
+
+- Current Django app is mostly session-auth + HTML-rendered endpoints.
+- For first-class native support, add JSON API endpoints (DRF recommended) for auth/library/create/details/status.
 
 ## TODO Markers You Should Replace
 
