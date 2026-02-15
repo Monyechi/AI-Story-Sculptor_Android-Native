@@ -18,11 +18,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class CreateBookFormState(
+    val title: String = "",
+    val author: String = "",
+    val bookType: String = "fiction-novel",
     val genre: String = "",
-    val ageGroup: String = "",
+    val language: String = "English",
+    val pov: String = "Third Person Limited",
+    val writingStyle: String = "descriptive",
+    val summary: String = "",
     val characterName: String = "",
     val characterDescription: String = "",
-    val storyOutline: String = "",
     val currentStep: Int = 0
 )
 
@@ -39,12 +44,36 @@ class CreateBookViewModel @Inject constructor(
     private val _generationState = MutableStateFlow<UiState<GenerationStatus>?>(null)
     val generationState: StateFlow<UiState<GenerationStatus>?> = _generationState.asStateFlow()
 
+    fun updateTitle(value: String) {
+        _formState.value = _formState.value.copy(title = value)
+    }
+
+    fun updateAuthor(value: String) {
+        _formState.value = _formState.value.copy(author = value)
+    }
+
+    fun updateBookType(value: String) {
+        _formState.value = _formState.value.copy(bookType = value)
+    }
+
     fun updateGenre(value: String) {
         _formState.value = _formState.value.copy(genre = value)
     }
 
-    fun updateAgeGroup(value: String) {
-        _formState.value = _formState.value.copy(ageGroup = value)
+    fun updateLanguage(value: String) {
+        _formState.value = _formState.value.copy(language = value)
+    }
+
+    fun updatePov(value: String) {
+        _formState.value = _formState.value.copy(pov = value)
+    }
+
+    fun updateWritingStyle(value: String) {
+        _formState.value = _formState.value.copy(writingStyle = value)
+    }
+
+    fun updateSummary(value: String) {
+        _formState.value = _formState.value.copy(summary = value)
     }
 
     fun updateCharacterName(value: String) {
@@ -53,10 +82,6 @@ class CreateBookViewModel @Inject constructor(
 
     fun updateCharacterDescription(value: String) {
         _formState.value = _formState.value.copy(characterDescription = value)
-    }
-
-    fun updateStoryOutline(value: String) {
-        _formState.value = _formState.value.copy(storyOutline = value)
     }
 
     fun nextStep() {
@@ -73,11 +98,16 @@ class CreateBookViewModel @Inject constructor(
         viewModelScope.launch {
             val form = _formState.value
             val request = CreateBookRequest(
+                title = form.title,
+                author = form.author,
+                bookType = form.bookType,
                 genre = form.genre,
-                ageGroup = form.ageGroup,
+                language = form.language,
+                pov = form.pov,
+                writingStyle = form.writingStyle,
+                summary = form.summary,
                 characterName = form.characterName,
-                characterDescription = form.characterDescription,
-                storyOutline = form.storyOutline
+                characterDescription = form.characterDescription
             )
 
             _generationState.value = UiState.Loading

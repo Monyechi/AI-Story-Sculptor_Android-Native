@@ -32,8 +32,16 @@ class AuthRepositoryImpl @Inject constructor(
         displayName: String
     ): AppResult<Unit> {
         return try {
+            val generatedUsername = displayName.ifBlank {
+                email.substringBefore("@").ifBlank { "user" }
+            }
             val response = authApi.register(
-                RegisterRequestDto(email = email, password = password, displayName = displayName)
+                RegisterRequestDto(
+                    username = generatedUsername,
+                    email = email,
+                    password = password,
+                    displayName = displayName.ifBlank { generatedUsername }
+                )
             )
             tokenStorage.saveTokens(response.accessToken, response.refreshToken)
             AppResult.Success(Unit)

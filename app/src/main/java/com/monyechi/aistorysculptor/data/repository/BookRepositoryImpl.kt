@@ -58,11 +58,16 @@ class BookRepositoryImpl @Inject constructor(
         return try {
             val response = bookApi.createBook(
                 CreateBookRequestDto(
+                    title = request.title,
+                    author = request.author,
+                    bookType = request.bookType,
                     genre = request.genre,
-                    ageGroup = request.ageGroup,
+                    language = request.language,
+                    pov = request.pov,
+                    writingStyle = request.writingStyle,
+                    summary = request.summary,
                     characterName = request.characterName,
-                    characterDescription = request.characterDescription,
-                    storyOutline = request.storyOutline
+                    characterDescription = request.characterDescription
                 )
             )
             AppResult.Success(

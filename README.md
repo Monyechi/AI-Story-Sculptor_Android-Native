@@ -65,6 +65,14 @@ Important:
 - Current Django app is mostly session-auth + HTML-rendered endpoints.
 - For first-class native support, add JSON API endpoints (DRF recommended) for auth/library/create/details/status.
 
+## Mobile-First API Interface (Next)
+
+The app now targets a dedicated mobile contract (`/api/v1/mobile/...`) instead of web-template endpoints.
+
+- Contract spec: `docs/MOBILE_API_CONTRACT.md`
+- Android Retrofit interfaces already aligned to this contract in `data/api/ApiServices.kt`
+- Legacy web/session routes remain documented in `data/api/LegacyDjangoApi.kt` for reference only
+
 ## TODO Markers You Should Replace
 
 Search for `TODO:` in source files and replace:

@@ -40,20 +40,59 @@ fun CreateBookScreen(
         when (formState.currentStep) {
             0 -> {
                 OutlinedTextField(
+                    value = formState.title,
+                    onValueChange = viewModel::updateTitle,
+                    label = { Text("Book Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = formState.author,
+                    onValueChange = viewModel::updateAuthor,
+                    label = { Text("Author") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = formState.bookType,
+                    onValueChange = viewModel::updateBookType,
+                    label = { Text("Book Type (children/self-help/fiction-novel/non-fiction-novel)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            1 -> {
+                OutlinedTextField(
                     value = formState.genre,
                     onValueChange = viewModel::updateGenre,
                     label = { Text("Genre") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
-                    value = formState.ageGroup,
-                    onValueChange = viewModel::updateAgeGroup,
-                    label = { Text("Age Group") },
+                    value = formState.language,
+                    onValueChange = viewModel::updateLanguage,
+                    label = { Text("Language") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = formState.pov,
+                    onValueChange = viewModel::updatePov,
+                    label = { Text("Point of View") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = formState.writingStyle,
+                    onValueChange = viewModel::updateWritingStyle,
+                    label = { Text("Writing Style") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            1 -> {
+            2 -> {
+                OutlinedTextField(
+                    value = formState.summary,
+                    onValueChange = viewModel::updateSummary,
+                    label = { Text("Story Summary") },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 OutlinedTextField(
                     value = formState.characterName,
                     onValueChange = viewModel::updateCharacterName,
@@ -68,21 +107,17 @@ fun CreateBookScreen(
                 )
             }
 
-            2 -> {
-                OutlinedTextField(
-                    value = formState.storyOutline,
-                    onValueChange = viewModel::updateStoryOutline,
-                    label = { Text("Story Outline") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
             else -> {
                 Text("Review")
+                Text("Title: ${formState.title}")
+                Text("Author: ${formState.author}")
+                Text("Book Type: ${formState.bookType}")
                 Text("Genre: ${formState.genre}")
-                Text("Age Group: ${formState.ageGroup}")
+                Text("Language: ${formState.language}")
+                Text("POV: ${formState.pov}")
+                Text("Style: ${formState.writingStyle}")
+                Text("Summary: ${formState.summary}")
                 Text("Character: ${formState.characterName}")
-                Text("Outline: ${formState.storyOutline}")
             }
         }
 

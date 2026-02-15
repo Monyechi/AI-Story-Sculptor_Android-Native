@@ -1,11 +1,16 @@
 package com.monyechi.aistorysculptor.domain.model
 
 data class CreateBookRequest(
+    val title: String,
+    val author: String,
+    val bookType: String,
     val genre: String,
-    val ageGroup: String,
+    val language: String,
+    val pov: String,
+    val writingStyle: String,
+    val summary: String,
     val characterName: String,
-    val characterDescription: String,
-    val storyOutline: String
+    val characterDescription: String
 )
 
 data class GenerationStatus(
