@@ -6,6 +6,12 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
+// Load local.properties for API keys
+val localProps = java.util.Properties().apply {
+    val localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) load(localPropsFile.inputStream())
+}
+
 android {
     namespace = "com.monyechi.aistorysculptor"
     compileSdk = 35
@@ -19,11 +25,26 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val rawBaseUrl = (project.findProperty("BASE_URL") as String?) ?: "https://example.com/"
-        val normalizedBaseUrl = if (rawBaseUrl.endsWith("/")) rawBaseUrl else "$rawBaseUrl/"
-        buildConfigField("String", "BASE_URL", "\"$normalizedBaseUrl\"")
-        buildConfigField("String", "DOWNLOAD_PDF_PATH_TEMPLATE", "\"download/pdf/%s/\"")
-        buildConfigField("String", "DOWNLOAD_DOCX_PATH_TEMPLATE", "\"download/docx/%s/\"")
+        // OpenAI API key for all AI generation
+        buildConfigField(
+            "String", "OPENAI_API_KEY",
+            "\"${localProps.getProperty("OPENAI_API_KEY", "")}\""
+        )
+
+        // OpenAI base URL
+        buildConfigField(
+            "String", "OPENAI_BASE_URL",
+            "\"https://api.openai.com/v1/\""
+        )
+
+        // OpenAI model used across the app
+        buildConfigField("String", "OPENAI_MODEL", "\"gpt-4.1-mini\"")
+
+        // Stripe publishable key (client-safe)
+        buildConfigField(
+            "String", "STRIPE_PUBLISHABLE_KEY",
+            "\"${localProps.getProperty("STRIPE_PUBLISHABLE_KEY", "")}\""
+        )
     }
 
     buildTypes {
