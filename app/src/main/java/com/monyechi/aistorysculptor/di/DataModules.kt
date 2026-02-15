@@ -2,15 +2,15 @@ package com.monyechi.aistorysculptor.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.work.WorkManager
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.monyechi.aistorysculptor.BuildConfig
-import com.monyechi.aistorysculptor.data.api.AccessTokenInterceptor
-import com.monyechi.aistorysculptor.data.api.AuthApi
-import com.monyechi.aistorysculptor.data.api.BookApi
-import com.monyechi.aistorysculptor.data.api.TokenAuthenticator
+import com.monyechi.aistorysculptor.data.api.OpenAiApi
+import com.monyechi.aistorysculptor.data.api.OpenAiInterceptor
 import com.monyechi.aistorysculptor.data.db.AppDatabase
 import com.monyechi.aistorysculptor.data.db.BookDao
+import com.monyechi.aistorysculptor.data.db.ChapterDao
+import com.monyechi.aistorysculptor.data.db.CharacterDao
+import com.monyechi.aistorysculptor.data.db.UserDao
 import com.monyechi.aistorysculptor.data.repository.AuthRepositoryImpl
 import com.monyechi.aistorysculptor.data.repository.BookRepositoryImpl
 import com.monyechi.aistorysculptor.domain.repository.AuthRepository
@@ -27,7 +27,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -45,32 +44,34 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
+            else HttpLoggingInterceptor.Level.NONE
         }
     }
 
     @Provides
     @Singleton
-    @Named("authFreeClient")
-    fun provideAuthFreeClient(
-        loggingInterceptor: HttpLoggingInterceptor
+    fun provideOpenAiClient(
+        openAiInterceptor: OpenAiInterceptor,
+        loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(openAiInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)   // generation can be slow
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 
     @Provides
     @Singleton
-    @Named("authRetrofit")
-    fun provideAuthRetrofit(
-        @Named("authFreeClient") client: OkHttpClient,
-        json: Json
+    fun provideOpenAiRetrofit(
+        client: OkHttpClient,
+        json: Json,
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(BuildConfig.OPENAI_BASE_URL)
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
@@ -78,45 +79,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAuthApi(@Named("authRetrofit") retrofit: Retrofit): AuthApi {
-        return retrofit.create(AuthApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    @Named("mainClient")
-    fun provideMainClient(
-        accessTokenInterceptor: AccessTokenInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-        loggingInterceptor: HttpLoggingInterceptor
-    ): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(accessTokenInterceptor)
-            .authenticator(tokenAuthenticator)
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    @Named("mainRetrofit")
-    fun provideMainRetrofit(
-        @Named("mainClient") client: OkHttpClient,
-        json: Json
-    ): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
-            .client(client)
-            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideBookApi(@Named("mainRetrofit") retrofit: Retrofit): BookApi {
-        return retrofit.create(BookApi::class.java)
+    fun provideOpenAiApi(retrofit: Retrofit): OpenAiApi {
+        return retrofit.create(OpenAiApi::class.java)
     }
 }
 
@@ -131,17 +95,21 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "ai_story_sculptor.db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+         .build()
     }
+
+    @Provides
+    fun provideUserDao(database: AppDatabase): UserDao = database.userDao()
 
     @Provides
     fun provideBookDao(database: AppDatabase): BookDao = database.bookDao()
 
     @Provides
-    @Singleton
-    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
-        return WorkManager.getInstance(context)
-    }
+    fun provideChapterDao(database: AppDatabase): ChapterDao = database.chapterDao()
+
+    @Provides
+    fun provideCharacterDao(database: AppDatabase): CharacterDao = database.characterDao()
 }
 
 @Module

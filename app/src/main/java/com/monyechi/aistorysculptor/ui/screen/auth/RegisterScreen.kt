@@ -27,6 +27,7 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onBackToLogin: () -> Unit
 ) {
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
@@ -39,6 +40,13 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Create account", style = MaterialTheme.typography.headlineSmall)
+
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         OutlinedTextField(
             value = displayName,
@@ -69,7 +77,7 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                authViewModel.register(email, password, displayName, onRegisterSuccess)
+                authViewModel.register(username, email, password, displayName, onRegisterSuccess)
             },
             modifier = Modifier.fillMaxWidth()
         ) {

@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -32,23 +29,16 @@ import com.monyechi.aistorysculptor.ui.viewmodel.LibraryViewModel
 fun LibraryScreen(
     paddingValues: PaddingValues,
     viewModel: LibraryViewModel,
-    onBookClick: (String) -> Unit,
+    onBookClick: (Long) -> Unit,
     onCreateClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
 ) {
     val booksState by viewModel.booksState.collectAsStateWithLifecycle()
-    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = isRefreshing,
-        onRefresh = viewModel::refresh
-    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .pullRefresh(pullRefreshState)
     ) {
         when (val state = booksState) {
             UiState.Loading -> {
@@ -66,9 +56,7 @@ fun LibraryScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(text = state.message, color = MaterialTheme.colorScheme.error)
-                    Button(onClick = viewModel::refresh) {
-                        Text("Retry")
-                    }
+                    Button(onClick = { viewModel.loadBooks() }) { Text("Retry") }
                 }
             }
 
@@ -77,60 +65,49 @@ fun LibraryScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    LibraryActions(
-                        onCreateClick = onCreateClick,
-                        onLogout = onLogout
-                    )
+                    LibraryActions(onCreateClick = onCreateClick, onLogout = onLogout)
 
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(state.data) { book ->
-                            LibraryBookItem(
-                                book = book,
-                                onClick = { onBookClick(book.id) }
-                            )
+                    if (state.data.isEmpty()) {
+                        Text(
+                            text = "No books yet. Tap \"Create New Book\" to get started!",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(state.data) { book ->
+                                LibraryBookItem(
+                                    book = book,
+                                    onClick = { onBookClick(book.id) }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-
-        PullRefreshIndicator(
-            refreshing = isRefreshing,
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
 }
 
 @Composable
-private fun LibraryActions(
-    onCreateClick: () -> Unit,
-    onLogout: () -> Unit
-) {
+private fun LibraryActions(onCreateClick: () -> Unit, onLogout: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Button(onClick = onCreateClick, modifier = Modifier.fillMaxWidth()) {
-            Text("Create New Book")
-        }
-        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-            Text("Logout")
-        }
+        Button(onClick = onCreateClick, modifier = Modifier.fillMaxWidth()) { Text("Create New Book") }
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Logout") }
     }
 }
 
 @Composable
-private fun LibraryBookItem(
-    book: Book,
-    onClick: () -> Unit
-) {
+private fun LibraryBookItem(book: Book, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,7 +115,7 @@ private fun LibraryBookItem(
     ) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(text = book.title, fontWeight = FontWeight.SemiBold)
-            Text(text = "Status: ${book.status}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = book.genre.ifBlank { book.bookType }, style = MaterialTheme.typography.bodyMedium)
             Text(text = "Created: ${book.createdAtIso}", style = MaterialTheme.typography.bodySmall)
         }
     }

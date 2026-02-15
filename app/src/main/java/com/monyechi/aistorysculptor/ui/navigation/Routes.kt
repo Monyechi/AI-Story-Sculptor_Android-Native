@@ -10,6 +10,6 @@ sealed class Route(val value: String) {
     data object Library : Route("main/library")
     data object CreateBook : Route("main/create")
     data object BookDetails : Route("main/details/{bookId}") {
-        fun withId(bookId: String): String = "main/details/$bookId"
+        fun withId(bookId: Long): String = "main/details/$bookId"
     }
 }

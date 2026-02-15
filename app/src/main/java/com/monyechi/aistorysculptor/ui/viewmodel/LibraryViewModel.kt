@@ -4,8 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.monyechi.aistorysculptor.domain.common.AppResult
 import com.monyechi.aistorysculptor.domain.model.Book
-import com.monyechi.aistorysculptor.domain.usecase.ObserveCachedBooksUseCase
-import com.monyechi.aistorysculptor.domain.usecase.RefreshBooksUseCase
+import com.monyechi.aistorysculptor.domain.usecase.DeleteBookUseCase
+import com.monyechi.aistorysculptor.domain.usecase.GetCurrentUserUseCase
+import com.monyechi.aistorysculptor.domain.usecase.ObserveBooksUseCase
 import com.monyechi.aistorysculptor.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,42 +18,34 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val observeCachedBooksUseCase: ObserveCachedBooksUseCase,
-    private val refreshBooksUseCase: RefreshBooksUseCase
+    private val observeBooksUseCase: ObserveBooksUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val deleteBookUseCase: DeleteBookUseCase,
 ) : ViewModel() {
 
     private val _booksState = MutableStateFlow<UiState<List<Book>>>(UiState.Loading)
     val booksState: StateFlow<UiState<List<Book>>> = _booksState.asStateFlow()
 
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-
     init {
-        observeCachedBooks()
-        refresh()
+        loadBooks()
     }
 
-    fun refresh() {
+    fun loadBooks() {
         viewModelScope.launch {
-            _isRefreshing.value = true
-            when (val result = refreshBooksUseCase()) {
-                is AppResult.Success -> Unit
-                is AppResult.Failure -> {
-                    val current = (_booksState.value as? UiState.Success)?.data.orEmpty()
-                    if (current.isEmpty()) {
-                        _booksState.value = UiState.Error(result.message)
-                    }
-                }
+            val user = getCurrentUserUseCase()
+            if (user == null) {
+                _booksState.value = UiState.Error("Not logged in")
+                return@launch
             }
-            _isRefreshing.value = false
+            observeBooksUseCase(user.id).collectLatest { books ->
+                _booksState.value = UiState.Success(books)
+            }
         }
     }
 
-    private fun observeCachedBooks() {
+    fun deleteBook(bookId: Long) {
         viewModelScope.launch {
-            observeCachedBooksUseCase().collectLatest { books ->
-                _booksState.value = UiState.Success(books)
-            }
+            deleteBookUseCase(bookId)
         }
     }
 }

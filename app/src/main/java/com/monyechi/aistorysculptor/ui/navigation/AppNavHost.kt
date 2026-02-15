@@ -118,15 +118,9 @@ fun AppNavHost(
                 val createBookViewModel: CreateBookViewModel = hiltViewModel()
                 CreateBookScreen(
                     viewModel = createBookViewModel,
-                    onGenerated = { generatedBookId ->
-                        if (generatedBookId.isNullOrBlank()) {
-                            navController.navigate(Route.Library.value) {
-                                popUpTo(Route.CreateBook.value) { inclusive = true }
-                            }
-                        } else {
-                            navController.navigate(Route.BookDetails.withId(generatedBookId)) {
-                                popUpTo(Route.CreateBook.value) { inclusive = true }
-                            }
+                    onCreated = { bookId ->
+                        navController.navigate(Route.BookDetails.withId(bookId)) {
+                            popUpTo(Route.CreateBook.value) { inclusive = true }
                         }
                     },
                     onBack = { navController.popBackStack() }
@@ -135,9 +129,9 @@ fun AppNavHost(
 
             composable(
                 route = Route.BookDetails.value,
-                arguments = listOf(navArgument("bookId") { type = NavType.StringType })
+                arguments = listOf(navArgument("bookId") { type = NavType.LongType })
             ) {
-                val bookId = it.arguments?.getString("bookId").orEmpty()
+                val bookId = it.arguments?.getLong("bookId") ?: 0L
                 val bookDetailsViewModel: BookDetailsViewModel = hiltViewModel()
                 BookDetailsScreen(
                     bookId = bookId,
