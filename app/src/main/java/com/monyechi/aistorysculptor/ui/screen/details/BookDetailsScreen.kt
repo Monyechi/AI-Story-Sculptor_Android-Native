@@ -1,178 +1,202 @@
 package com.monyechi.aistorysculptor.ui.screen.details
 
-import android.content.Intent
-import android.net.Uri
-import androidx.core.content.FileProvider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.monyechi.aistorysculptor.data.work.DownloadBookWorker
 import com.monyechi.aistorysculptor.ui.common.UiState
 import com.monyechi.aistorysculptor.ui.viewmodel.BookDetailsViewModel
-import com.monyechi.aistorysculptor.ui.viewmodel.DownloadUiState
-import java.io.File
 
 @Composable
 fun BookDetailsScreen(
-    bookId: String,
+    bookId: Long,
     viewModel: BookDetailsViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
-    val context = LocalContext.current
     val detailsState by viewModel.detailsState.collectAsStateWithLifecycle()
-    val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
-    var downloadedFilePath by remember { mutableStateOf<String?>(null) }
+    val isBusy by viewModel.isBusy.collectAsStateWithLifecycle()
+    val actionMessage by viewModel.actionMessage.collectAsStateWithLifecycle()
+    val renderProgress by viewModel.renderProgress.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(bookId) {
-        viewModel.load(bookId)
-    }
+    LaunchedEffect(bookId) { viewModel.load(bookId) }
 
-    LaunchedEffect(downloadState) {
-        if (downloadState is DownloadUiState.Success) {
-            downloadedFilePath = (downloadState as DownloadUiState.Success).filePath
+    LaunchedEffect(actionMessage) {
+        actionMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.consumeMessage()
         }
     }
 
-    when (val state = detailsState) {
-        UiState.Loading -> {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text("Book Details", style = MaterialTheme.typography.headlineSmall)
-                CircularProgressIndicator()
-            }
-        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        SnackbarHost(hostState = snackbarHostState)
 
-        is UiState.Error -> {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text("Book Details", style = MaterialTheme.typography.headlineSmall)
-                Text(state.message, color = MaterialTheme.colorScheme.error)
-                Button(onClick = { viewModel.load(bookId) }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Retry")
-                }
-                Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                    Text("Back")
-                }
-            }
-        }
-
-        is UiState.Success -> {
-            val details = state.data
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
+        when (val state = detailsState) {
+            UiState.Loading -> {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Text("Book Details", style = MaterialTheme.typography.headlineSmall)
-                    Text(details.title, style = MaterialTheme.typography.titleLarge)
-                    Text("Status: ${details.status}")
-                    Text("Created: ${details.createdAtIso}")
+                    CircularProgressIndicator()
                 }
+            }
 
-                item {
-                    Button(
-                        enabled = downloadState !is DownloadUiState.InProgress,
-                        onClick = {
-                            viewModel.downloadBook(
-                                bookId = details.id,
-                                bookTitle = details.title,
-                                format = DownloadBookWorker.FORMAT_PDF
+            is UiState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Book Details", style = MaterialTheme.typography.headlineSmall)
+                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                    Button(onClick = { viewModel.load(bookId) }, modifier = Modifier.fillMaxWidth()) { Text("Retry") }
+                    Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                }
+            }
+
+            is UiState.Success -> {
+                val details = state.data
+                val book = details.book
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // ── Book Info ─────────────────────────────────────
+                    item {
+                        Text(book.title, style = MaterialTheme.typography.headlineSmall)
+                        Text("by ${book.author}", style = MaterialTheme.typography.bodyLarge)
+                        Spacer(Modifier.height(4.dp))
+                        Text("${book.bookType} • ${book.genre}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Language: ${book.language} • POV: ${book.pov}", style = MaterialTheme.typography.bodySmall)
+                        if (book.summary.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(book.summary, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+
+                    // ── AI Actions ────────────────────────────────────
+                    item {
+                        HorizontalDivider()
+                        Text("AI Actions", style = MaterialTheme.typography.titleMedium)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                enabled = !isBusy,
+                                onClick = { viewModel.generateSummary(bookId) },
+                            ) { Text("Generate Summary") }
+                            Button(
+                                enabled = !isBusy,
+                                onClick = { viewModel.generateCoverArt(bookId) },
+                            ) { Text("Cover Art") }
+                        }
+                    }
+
+                    // ── Render progress ───────────────────────────────
+                    renderProgress?.let { progress ->
+                        item {
+                            Text(
+                                "${progress.message} (${progress.currentChapter}/${progress.totalChapters})",
+                                style = MaterialTheme.typography.bodyMedium,
                             )
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(if (downloadState is DownloadUiState.InProgress) "Downloading..." else "Download")
+                        }
                     }
-                }
 
-                item {
-                    Button(
-                        enabled = !downloadedFilePath.isNullOrBlank() || !details.shareUrl.isNullOrBlank() || !details.downloadUrl.isNullOrBlank(),
-                        onClick = {
-                            val localPath = downloadedFilePath
-                            if (!localPath.isNullOrBlank()) {
-                                val file = File(localPath)
-                                val uri = FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    file
+                    // ── Chapters ──────────────────────────────────────
+                    item {
+                        HorizontalDivider()
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Chapters (${details.chapters.size})", style = MaterialTheme.typography.titleMedium)
+                            Button(
+                                enabled = !isBusy,
+                                onClick = { viewModel.autoGenerateChapters(bookId) },
+                            ) { Text("+ Auto Chapter") }
+                        }
+                        if (details.chapters.any { !it.rendered }) {
+                            Button(
+                                enabled = !isBusy,
+                                onClick = { viewModel.renderAllChapters(bookId) },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Render All Unrendered") }
+                        }
+                    }
+
+                    items(details.chapters) { chapter ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    "Ch. ${chapter.chapterNum}: ${chapter.title}",
+                                    fontWeight = FontWeight.SemiBold,
                                 )
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "application/pdf"
-                                    putExtra(Intent.EXTRA_STREAM, uri)
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                Text(chapter.summary, style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                                Text(
+                                    if (chapter.rendered) "Rendered (${chapter.wordCount} words)" else "Not rendered",
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    if (!chapter.rendered) {
+                                        OutlinedButton(
+                                            enabled = !isBusy,
+                                            onClick = { viewModel.renderChapter(bookId, chapter.id) },
+                                        ) { Text("Render") }
+                                    }
+                                    OutlinedButton(onClick = { viewModel.deleteChapter(bookId, chapter.id) }) { Text("Delete") }
                                 }
-                                context.startActivity(Intent.createChooser(shareIntent, "Share Book"))
-                            } else {
-                                val shareText = details.shareUrl ?: details.downloadUrl.orEmpty()
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, shareText)
-                                }
-                                context.startActivity(Intent.createChooser(shareIntent, "Share Book"))
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Share")
+                        }
                     }
-                }
 
-                item {
-                    when (val state = downloadState) {
-                        DownloadUiState.Idle -> Unit
-                        DownloadUiState.InProgress -> Text("Download in progress...")
-                        is DownloadUiState.Success -> Text("Downloaded: ${state.filePath}")
-                        is DownloadUiState.Error -> Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                    // ── Characters ────────────────────────────────────
+                    item {
+                        HorizontalDivider()
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Characters (${details.characters.size})", style = MaterialTheme.typography.titleMedium)
+                            Button(
+                                enabled = !isBusy,
+                                onClick = { viewModel.autoGenerateCharacter(bookId) },
+                            ) { Text("+ Auto Character") }
+                        }
                     }
-                }
 
-                items(details.chapters) { chapter ->
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = "Chapter ${chapter.index}: ${chapter.title}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(chapter.content)
+                    items(details.characters) { character ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(character.name, fontWeight = FontWeight.SemiBold)
+                                Text("${character.role} • Age: ${character.age ?: "?"}", style = MaterialTheme.typography.bodySmall)
+                                character.bio?.let { Text(it, style = MaterialTheme.typography.bodySmall, maxLines = 2) }
+                                OutlinedButton(onClick = { viewModel.deleteCharacter(bookId, character.id) }) { Text("Delete") }
+                            }
+                        }
                     }
-                }
 
-                item {
-                    Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                        Text("Back")
+                    // ── Navigation ────────────────────────────────────
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
                     }
                 }
             }

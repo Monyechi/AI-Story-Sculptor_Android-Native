@@ -21,11 +21,11 @@ import com.monyechi.aistorysculptor.ui.viewmodel.CreateBookViewModel
 @Composable
 fun CreateBookScreen(
     viewModel: CreateBookViewModel,
-    onGenerated: (String?) -> Unit,
-    onBack: () -> Unit
+    onCreated: (Long) -> Unit,
+    onBack: () -> Unit,
 ) {
     val formState by viewModel.formState.collectAsStateWithLifecycle()
-    val generationState by viewModel.generationState.collectAsStateWithLifecycle()
+    val createState by viewModel.createState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -34,7 +34,6 @@ fun CreateBookScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Create Book", style = MaterialTheme.typography.headlineSmall)
-
         Text("Step ${formState.currentStep + 1} of 4")
 
         when (formState.currentStep) {
@@ -90,25 +89,14 @@ fun CreateBookScreen(
                 OutlinedTextField(
                     value = formState.summary,
                     onValueChange = viewModel::updateSummary,
-                    label = { Text("Story Summary") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = formState.characterName,
-                    onValueChange = viewModel::updateCharacterName,
-                    label = { Text("Main Character Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = formState.characterDescription,
-                    onValueChange = viewModel::updateCharacterDescription,
-                    label = { Text("Character Description") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Story Summary (leave blank to auto-generate)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
                 )
             }
 
             else -> {
-                Text("Review")
+                Text("Review", style = MaterialTheme.typography.titleMedium)
                 Text("Title: ${formState.title}")
                 Text("Author: ${formState.author}")
                 Text("Book Type: ${formState.bookType}")
@@ -116,27 +104,23 @@ fun CreateBookScreen(
                 Text("Language: ${formState.language}")
                 Text("POV: ${formState.pov}")
                 Text("Style: ${formState.writingStyle}")
-                Text("Summary: ${formState.summary}")
-                Text("Character: ${formState.characterName}")
+                if (formState.summary.isNotBlank()) {
+                    Text("Summary: ${formState.summary}")
+                }
             }
         }
 
-        when (val state = generationState) {
+        when (val state = createState) {
             UiState.Loading -> {
                 CircularProgressIndicator()
-                Text("Submitting and polling generation status...")
+                Text("Creating book...")
             }
-
             is UiState.Success -> {
-                Text("Status: ${state.data.status}")
-                state.data.progress?.let { Text("Progress: $it%") }
-                state.data.message?.let { Text(it) }
+                Text("Book created!", color = MaterialTheme.colorScheme.primary)
             }
-
             is UiState.Error -> {
                 Text(state.message, color = MaterialTheme.colorScheme.error)
             }
-
             null -> Unit
         }
 
@@ -152,17 +136,16 @@ fun CreateBookScreen(
             }
         } else {
             Button(
-                onClick = {
-                    viewModel.submitAndPoll(onCompleted = onGenerated)
-                },
+                enabled = createState !is UiState.Loading,
+                onClick = { viewModel.submit(onCreated = onCreated) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Generate Book")
+                Text("Create Book")
             }
         }
 
         Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-            Text("Back")
+            Text("Cancel")
         }
     }
 }
