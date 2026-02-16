@@ -1,18 +1,15 @@
 package com.monyechi.aistorysculptor.ui.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,7 +30,6 @@ import com.monyechi.aistorysculptor.ui.viewmodel.CreateBookViewModel
 import com.monyechi.aistorysculptor.ui.viewmodel.LibraryViewModel
 import com.monyechi.aistorysculptor.ui.viewmodel.SessionViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(
     sessionViewModel: SessionViewModel = hiltViewModel()
@@ -94,28 +90,21 @@ fun AppNavHost(
         ) {
             composable(Route.Library.value) {
                 val libraryViewModel: LibraryViewModel = hiltViewModel()
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text("Library", style = MaterialTheme.typography.titleLarge) }
-                        )
-                    }
-                ) { padding ->
-                    LibraryScreen(
-                        paddingValues = padding,
-                        viewModel = libraryViewModel,
-                        onBookClick = { bookId ->
-                            navController.navigate(Route.BookDetails.withId(bookId))
-                        },
-                        onCreateClick = { navController.navigate(Route.CreateBook.value) },
-                        onLogout = {
-                            sessionViewModel.logout()
-                            navController.navigate(Route.AuthRoot.value) {
-                                popUpTo(Route.MainRoot.value) { inclusive = true }
-                            }
+                val emptyPadding = PaddingValues(0.dp)
+                LibraryScreen(
+                    paddingValues = emptyPadding,
+                    viewModel = libraryViewModel,
+                    onBookClick = { bookId ->
+                        navController.navigate(Route.BookDetails.withId(bookId))
+                    },
+                    onCreateClick = { navController.navigate(Route.CreateBook.value) },
+                    onLogout = {
+                        sessionViewModel.logout()
+                        navController.navigate(Route.AuthRoot.value) {
+                            popUpTo(Route.MainRoot.value) { inclusive = true }
                         }
-                    )
-                }
+                    },
+                )
             }
 
             composable(Route.CreateBook.value) {
