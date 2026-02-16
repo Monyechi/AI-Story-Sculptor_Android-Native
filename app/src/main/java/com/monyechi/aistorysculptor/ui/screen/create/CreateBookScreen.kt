@@ -11,18 +11,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +58,30 @@ private val bookTypes = listOf(
     "fiction-novel" to "Fiction Novel",
     "non-fiction-novel" to "Non-Fiction Novel",
 )
+
+private val genres = listOf(
+    "Fantasy", "Mystery", "Thriller", "Romance", "Sci-Fi", 
+    "Horror", "Adventure", "Drama", "Historical", "Comedy"
+)
+
+private val languages = listOf(
+    "English", "Spanish", "French", "German", "Chinese", 
+    "Japanese", "Portuguese", "Russian", "Arabic", "Hindi"
+)
+
+private val pointsOfView = listOf(
+    "First person",
+    "Second person", 
+    "Third person limited",
+    "Third person omniscient"
+)
+
+private val writingStyles = listOf(
+    "Descriptive", "Narrative", "Persuasive", "Expository",
+    "Creative", "Humorous", "Formal", "Informal"
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 
 @Composable
 fun CreateBookScreen(
@@ -163,56 +195,59 @@ fun CreateBookScreen(
 
                         1 -> {
                             FormLabel("Genre:")
-                            OutlinedTextField(
+                            DropdownField(
                                 value = formState.genre,
+                                options = genres,
                                 onValueChange = viewModel::updateGenre,
-                                placeholder = { Text("e.g. Fantasy, Mystery", color = Beige.copy(alpha = 0.5f)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = fieldColors,
-                                singleLine = true,
+                                placeholder = "Select genre",
+                                fieldColors = fieldColors,
                             )
 
                             FormLabel("Language:")
-                            OutlinedTextField(
+                            DropdownField(
                                 value = formState.language,
+                                options = languages,
                                 onValueChange = viewModel::updateLanguage,
-                                placeholder = { Text("e.g. English", color = Beige.copy(alpha = 0.5f)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = fieldColors,
-                                singleLine = true,
+                                placeholder = "Select language",
+                                fieldColors = fieldColors,
                             )
 
                             FormLabel("Point of View:")
-                            OutlinedTextField(
+                            DropdownField(
                                 value = formState.pov,
+                                options = pointsOfView,
                                 onValueChange = viewModel::updatePov,
-                                placeholder = { Text("e.g. Third person", color = Beige.copy(alpha = 0.5f)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = fieldColors,
-                                singleLine = true,
+                                placeholder = "Select POV",
+                                fieldColors = fieldColors,
                             )
 
                             FormLabel("Writing Style:")
-                            OutlinedTextField(
+                            DropdownField(
                                 value = formState.writingStyle,
+                                options = writingStyles,
                                 onValueChange = viewModel::updateWritingStyle,
-                                placeholder = { Text("e.g. Descriptive, Humorous", color = Beige.copy(alpha = 0.5f)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = fieldColors,
-                                singleLine = true,
+                                placeholder = "Select style",
+                                fieldColors = fieldColors,
                             )
                         }
 
                         2 -> {
-                            FormLabel("Story Summary:")
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                FormLabel("Story Summary:")
+                                ForestOutlinedButton(
+                                    text = "Auto Generate",
+                                    onClick = { viewModel.generateSummary() },
+                                    modifier = Modifier,
+                                )
+                            }
                             OutlinedTextField(
                                 value = formState.summary,
                                 onValueChange = viewModel::updateSummary,
-                                placeholder = { Text("Leave blank to auto-generate", color = Beige.copy(alpha = 0.5f)) },
+                                placeholder = { Text("Click Auto Generate or write your own", color = Beige.copy(alpha = 0.5f)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = fieldColors,
@@ -315,5 +350,55 @@ private fun ReviewRow(label: String, value: String) {
     ) {
         Text("$label: ", color = Beige, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Text(value.ifBlank { "—" }, color = White, fontSize = 14.sp)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DropdownField(
+    value: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    fieldColors: androidx.compose.material3.TextFieldColors,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            placeholder = { Text(placeholder, color = Beige.copy(alpha = 0.5f)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            shape = RoundedCornerShape(8.dp),
+            colors = fieldColors,
+            singleLine = true,
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(DarkForestGreen)
+                .fillMaxWidth(),
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option, color = White) },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    },
+                    modifier = Modifier.background(DarkForestGreen),
+                )
+            }
+        }
     }
 }

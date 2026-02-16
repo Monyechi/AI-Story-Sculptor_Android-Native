@@ -6,12 +6,16 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.monyechi.aistorysculptor.ui.theme.AIStorySculptorTheme
 import com.monyechi.aistorysculptor.ui.theme.DarkForestGreen
+import com.monyechi.aistorysculptor.ui.theme.White
 
 /**
  * Semi-transparent dark green container card that sits on top of the
@@ -32,4 +36,17 @@ fun DarkContainer(
             .padding(20.dp),
         content = content,
     )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1A2F1A)
+@Composable
+fun DarkContainerPreview() {
+    AIStorySculptorTheme {
+        DarkContainer {
+            Text(
+                text = "This is a dark container card\nwith rounded corners",
+                color = White,
+            )
+        }
+    }
 }

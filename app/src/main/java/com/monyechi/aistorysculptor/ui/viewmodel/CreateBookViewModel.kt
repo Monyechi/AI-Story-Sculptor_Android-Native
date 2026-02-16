@@ -48,6 +48,21 @@ class CreateBookViewModel @Inject constructor(
     fun updateWritingStyle(value: String) { _formState.value = _formState.value.copy(writingStyle = value) }
     fun updateSummary(value: String) { _formState.value = _formState.value.copy(summary = value) }
 
+    fun generateSummary() {
+        viewModelScope.launch {
+            // TODO: Implement API call to generate summary based on book details
+            // For now, create a simple placeholder summary
+            val form = _formState.value
+            val generatedSummary = """
+                A ${form.genre.ifBlank { "captivating" }} ${form.bookType.replace("-", " ")} written in ${form.pov.ifBlank { "an engaging" }} perspective.
+                
+                [Auto-generated summary will be created based on your book details once the backend API is implemented]
+            """.trimIndent()
+            
+            _formState.value = _formState.value.copy(summary = generatedSummary)
+        }
+    }
+
     fun nextStep() {
         val next = (_formState.value.currentStep + 1).coerceAtMost(3)
         _formState.value = _formState.value.copy(currentStep = next)

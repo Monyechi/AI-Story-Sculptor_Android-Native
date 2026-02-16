@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.monyechi.aistorysculptor.ui.theme.*
@@ -193,5 +194,27 @@ fun ForestOutlinedButton(
         ),
     ) {
         Text(text = text, fontWeight = FontWeight.Medium)
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Previews
+// ══════════════════════════════════════════════════════════════════════
+
+@Preview(showBackground = true, backgroundColor = 0xFF2C3F2C)
+@Composable
+fun ButtonsPreview() {
+    AIStorySculptorTheme {
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        ) {
+            BannerButton(text = "Banner Button", onClick = {})
+            GreenButton(text = "Green Button", onClick = {})
+            CoralButton(text = "Coral Button", onClick = {})
+            DangerButton(text = "Danger Button", onClick = {})
+            OliveButton(text = "Olive Button", onClick = {})
+            ForestOutlinedButton(text = "Outlined Button", onClick = {})
+        }
     }
 }

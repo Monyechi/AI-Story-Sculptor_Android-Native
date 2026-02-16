@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +56,43 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
+    LoginScreenContent(
+        email = email,
+        password = password,
+        onEmailChange = { email = it },
+        onPasswordChange = { password = it },
+        onLoginClick = { authViewModel.login(email, password, onLoginSuccess) },
+        onSignUpClick = onNavigateRegister,
+        authState = authState,
+    )
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun LoginScreenPreview() {
+    AIStorySculptorTheme {
+        LoginScreenContent(
+            email = "user@example.com",
+            password = "password",
+            onEmailChange = {},
+            onPasswordChange = {},
+            onLoginClick = {},
+            onSignUpClick = {},
+            authState = null,
+        )
+    }
+}
+
+@Composable
+private fun LoginScreenContent(
+    email: String,
+    password: String,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onSignUpClick: () -> Unit,
+    authState: UiState<*>?,
+) {
     AppScaffold(backgroundRes = R.drawable.background_hero) {
         Column(
             modifier = Modifier
@@ -64,7 +102,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Logo — circular, matching .logo-image from web app
             Image(
                 painter = painterResource(R.drawable.aiss_logo),
                 contentDescription = "AI Story Sculptor Logo",
@@ -76,7 +113,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // App title — Roca font, white, centered
             Text(
                 text = "AI Story Sculptor",
                 style = MaterialTheme.typography.headlineLarge,
@@ -92,7 +128,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // Login card — dark forest green container
             DarkContainer(
                 modifier = Modifier.fillMaxWidth(),
                 cornerRadius = 15.dp,
@@ -110,7 +145,7 @@ fun LoginScreen(
 
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = onEmailChange,
                         label = { Text("Email") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
@@ -129,7 +164,7 @@ fun LoginScreen(
 
                     OutlinedTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = onPasswordChange,
                         label = { Text("Password") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
@@ -147,22 +182,23 @@ fun LoginScreen(
                         singleLine = true,
                     )
 
-                    when (val state = authState) {
+                    when (authState) {
                         is UiState.Error -> Text(
-                            state.message,
+                            authState.message,
                             color = DangerRed,
                             style = MaterialTheme.typography.bodySmall,
                         )
                         UiState.Loading -> CircularProgressIndicator(color = AccentGreen)
                         is UiState.Success -> Unit
+                        null -> Unit
                     }
 
                     BannerButton(
                         text = "Login",
-                        onClick = { authViewModel.login(email, password, onLoginSuccess) },
+                        onClick = onLoginClick,
                     )
 
-                    TextButton(onClick = onNavigateRegister) {
+                    TextButton(onClick = onSignUpClick) {
                         Text(
                             "Don't have an account? Sign up",
                             color = Beige,
