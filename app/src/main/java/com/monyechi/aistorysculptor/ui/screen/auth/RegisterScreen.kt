@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -155,6 +156,53 @@ fun RegisterScreen(
                     TextButton(onClick = onBackToLogin) {
                         Text(
                             "Already have an account? Login",
+                            color = Beige,
+                            fontSize = 14.sp,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun RegisterScreenPreview() {
+    AIStorySculptorTheme {
+        AppScaffold(backgroundRes = R.drawable.background_hero) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = "Join AI Story Sculptor",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = White,
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                DarkContainer(
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 15.dp,
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "Create Account",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = White,
+                        )
+                        Text(
+                            text = "Preview Mode",
                             color = Beige,
                             fontSize = 14.sp,
                         )

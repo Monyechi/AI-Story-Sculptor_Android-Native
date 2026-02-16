@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -398,6 +399,47 @@ private fun DropdownField(
                     },
                     modifier = Modifier.background(DarkForestGreen),
                 )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun CreateBookScreenPreview() {
+    AIStorySculptorTheme {
+        AppScaffold {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                DarkContainer(
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 15.dp,
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        Text(
+                            text = "Create New Book",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = "Step 1 of 4",
+                            color = Beige,
+                            fontSize = 14.sp,
+                        )
+                        
+                        FormLabel("Title:")
+                        Text("Preview mode - ViewModels not available", color = Beige)
+                    }
+                }
             }
         }
     }
