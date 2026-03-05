@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -16,6 +17,7 @@ import com.monyechi.aistorysculptor.ui.theme.OverlayDark
 /**
  * Full-screen background image scaffold matching the web app's
  * background-image + dark overlay pattern used on every page.
+ * Content respects system bars (status bar visible at top).
  */
 @Composable
 fun AppScaffold(
@@ -24,7 +26,7 @@ fun AppScaffold(
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background image — covers entire screen
+        // Background image — covers entire screen including status bar area
         Image(
             painter = painterResource(backgroundRes),
             contentDescription = null,
@@ -39,7 +41,13 @@ fun AppScaffold(
                     .background(OverlayDark)
             )
         }
-        // Content on top
-        content()
+        // Content on top with padding for status bar
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            content()
+        }
     }
 }
