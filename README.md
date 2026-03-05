@@ -38,15 +38,15 @@ Notes:
 - Keep trailing slash (the build script also normalizes it).
 - This value is exposed as `BuildConfig.BASE_URL`.
 
-## Implemented MVP Skeleton
+## Current Features
 
-- Auth flow: Login/Register screens + token persistence
-- OkHttp `Authorization` interceptor + 401 refresh authenticator skeleton
-- Library screen: Room cached list + pull-to-refresh network update
-- Navigation: AuthFlow and MainFlow (Library/Create/Details)
-- Create flow: 4-step wizard + submit + polling every 4s for generation status
-- Details flow: metadata + chapters + download/share actions
-- WorkManager download: background PDF fetch + local file share via FileProvider
+- Authentication screens for login and registration with persisted auth token state.
+- OkHttp authorization interceptor and 401 refresh authenticator integration in the network stack.
+- Library screen backed by Room cache with pull-to-refresh updates from the backend.
+- Compose navigation split into authenticated and main flows (Library/Create/Details).
+- Story creation flow implemented as a 4-step wizard with submission and generation-status polling.
+- Story details screen with metadata, chapter display, and download/share actions.
+- Background PDF download via WorkManager and local sharing through FileProvider.
 
 ## Django Route Mapping (Phase 3)
 
@@ -73,14 +73,17 @@ The app now targets a dedicated mobile contract (`/api/v1/mobile/...`) instead o
 - Android Retrofit interfaces already aligned to this contract in `data/api/ApiServices.kt`
 - Legacy web/session routes remain documented in `data/api/LegacyDjangoApi.kt` for reference only
 
-## TODO Markers You Should Replace
+## Known Limitations
 
-Search for `TODO:` in source files and replace:
+- The backend must expose the documented mobile JSON contract (`/api/v1/mobile/...`) for full compatibility.
+- Legacy Django session/HTML routes are retained for reference and are not the target integration path for this client.
+- Features that depend on backend job lifecycle data (generation progress/status timing) are limited by backend endpoint behavior.
 
-- Exact endpoint paths
-- Exact request/response JSON fields
-- Create-book flow + polling
-- Book details, download, and share integration
+## Roadmap
+
+- Complete and verify end-to-end backend parity for all mobile contract endpoints in production environments.
+- Improve reliability and UX around long-running generation jobs and status polling.
+- Expand automated testing coverage across networking, persistence, and key user flows.
 
 ## Run
 
@@ -88,4 +91,3 @@ Search for `TODO:` in source files and replace:
 2. Sync Gradle.
 3. Configure `BASE_URL`.
 4. Run app on emulator/device.
-
