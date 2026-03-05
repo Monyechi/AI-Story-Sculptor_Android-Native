@@ -92,3 +92,28 @@ The app now targets a dedicated mobile contract (`/api/v1/mobile/...`) instead o
 2. Sync Gradle.
 3. Configure `BASE_URL`.
 4. Run app on emulator/device.
+
+
+## Testing
+
+Run deterministic unit tests (ViewModels, use cases, and repository boundaries):
+
+```bash
+./gradlew testDebugUnitTest
+```
+
+Expected output:
+
+- `BUILD SUCCESSFUL`
+- Unit tests including `AuthViewModelTest`, `CreateBookViewModelTest`, and `RepositoryBoundaryUseCaseTest` pass.
+
+Run smoke instrumentation test (register/login + create-book happy path):
+
+```bash
+./gradlew connectedDebugAndroidTest
+```
+
+Expected output:
+
+- `BUILD SUCCESSFUL`
+- `AuthAndCreateBookSmokeTest` passes on a connected emulator/device.
