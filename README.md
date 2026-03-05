@@ -50,7 +50,7 @@ Notes:
 
 ## Django Route Mapping (Phase 3)
 
-Mapped legacy backend routes (in `LegacyDjangoApi`):
+Mapped legacy backend routes (see `app/src/main/java/com/monyechi/aistorysculptor/data/api/LegacyDjangoApi.kt`):
 
 - `login/`
 - `register/`
@@ -70,8 +70,9 @@ Important:
 The app now targets a dedicated mobile contract (`/api/v1/mobile/...`) instead of web-template endpoints.
 
 - Contract spec: `docs/MOBILE_API_CONTRACT.md`
-- Android Retrofit interfaces already aligned to this contract in `data/api/ApiServices.kt`
-- Legacy web/session routes remain documented in `data/api/LegacyDjangoApi.kt` for reference only
+- Android Retrofit interfaces aligned to this contract in `app/src/main/java/com/monyechi/aistorysculptor/data/api/ApiServices.kt`
+- Mobile request/response DTOs in `app/src/main/java/com/monyechi/aistorysculptor/data/api/MobileApiDtos.kt`
+- Legacy web/session route map in `app/src/main/java/com/monyechi/aistorysculptor/data/api/LegacyDjangoApi.kt` for reference only
 
 ## Known Limitations
 
