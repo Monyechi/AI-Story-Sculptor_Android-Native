@@ -62,17 +62,24 @@ class FakeBookRepository : BookRepository {
     var createBookResult: AppResult<Book> = AppResult.Failure("create not configured")
     var lastCreate: Pair<Long, CreateBookRequest>? = null
 
-    override fun observeBooks(userId: Long): Flow<List<Book>> = flowOf(emptyList())
+    var booksToEmit: List<Book> = emptyList()
+    var bookDetailsResult: AppResult<BookDetails> = AppResult.Failure("details not configured")
+    var deleteBookResult: AppResult<Unit> = AppResult.Success(Unit)
+    var lastDeleteBookId: Long? = null
+
+    override fun observeBooks(userId: Long): Flow<List<Book>> = flowOf(booksToEmit)
 
     override suspend fun createBook(userId: Long, request: CreateBookRequest): AppResult<Book> {
         lastCreate = userId to request
         return createBookResult
     }
 
-    override suspend fun getBookDetails(bookId: Long): AppResult<BookDetails> =
-        AppResult.Failure("not needed")
+    override suspend fun getBookDetails(bookId: Long): AppResult<BookDetails> = bookDetailsResult
 
-    override suspend fun deleteBook(bookId: Long): AppResult<Unit> = AppResult.Success(Unit)
+    override suspend fun deleteBook(bookId: Long): AppResult<Unit> {
+        lastDeleteBookId = bookId
+        return deleteBookResult
+    }
 
     override suspend fun generateBookSummary(bookId: Long): AppResult<String> =
         AppResult.Failure("not needed")
