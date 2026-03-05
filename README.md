@@ -1,6 +1,7 @@
 # AI Story Sculptor (Android Native)
 
-[![Android CI](https://github.com/OWNER/AI-Story-Sculptor_Android-Native/actions/workflows/android-ci.yml/badge.svg)](https://github.com/OWNER/AI-Story-Sculptor_Android-Native/actions/workflows/android-ci.yml)
+[![Android CI](https://github.com/Monyechi/AI-Story-Sculptor_Android-Native/actions/workflows/android-ci.yml/badge.svg)](https://github.com/Monyechi/AI-Story-Sculptor_Android-Native/actions/workflows/android-ci.yml)
+[![Download APK](https://img.shields.io/badge/Download-APK%20v1.0.0-brightgreen?logo=android)](https://github.com/Monyechi/AI-Story-Sculptor_Android-Native/releases/download/v1.0.0-mvp/AI-Story-Sculptor-v1.0.0-mvp.apk)
 
 Native Android client for the existing Django backend, built with Kotlin + Jetpack Compose.
 
