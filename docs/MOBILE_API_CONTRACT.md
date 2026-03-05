@@ -8,6 +8,46 @@ This contract is optimized for native clients and intentionally decoupled from w
 - Auth: `Authorization: Bearer <access_token>`
 - Content-Type: `application/json`
 
+## AI Proxy Behavior (Backend-Owned)
+
+Mobile clients **must not** call OpenAI directly.
+
+- Text generation endpoint: `POST /api/v1/mobile/ai/chat/completions/`
+- Image generation endpoint: `POST /api/v1/mobile/ai/images/generations/`
+- Mobile sends prompt/model options to backend; backend injects provider credentials and forwards requests.
+- Backend returns provider-shaped payloads used by mobile DTOs (`choices[].message.content`, `data[].b64_json`, etc.).
+- Provider keys (`OPENAI_API_KEY`) are server-only and must come from backend environment variables.
+
+### `POST /api/v1/mobile/ai/chat/completions/`
+Request:
+```json
+{
+  "model": "gpt-4.1-mini",
+  "messages": [
+    { "role": "system", "content": "You are a helpful writing assistant." },
+    { "role": "user", "content": "Write a short story summary." }
+  ],
+  "max_tokens": 500,
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "response_format": { "type": "json_object" }
+}
+```
+Response shape mirrors OpenAI chat completion fields consumed by Android.
+
+### `POST /api/v1/mobile/ai/images/generations/`
+Request:
+```json
+{
+  "model": "gpt-image-1",
+  "prompt": "A moonlit forest in watercolor style",
+  "size": "1024x1536",
+  "quality": "high",
+  "n": 1
+}
+```
+Response shape mirrors image generation fields consumed by Android.
+
 ## Auth
 
 ### `POST /api/v1/mobile/auth/register/`

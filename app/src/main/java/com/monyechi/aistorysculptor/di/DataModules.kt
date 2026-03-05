@@ -71,7 +71,7 @@ object NetworkModule {
         json: Json,
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.OPENAI_BASE_URL)
+            .baseUrl(BuildConfig.BASE_URL)
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

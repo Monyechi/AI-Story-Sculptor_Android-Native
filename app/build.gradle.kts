@@ -27,20 +27,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // OpenAI API key for all AI generation
+        // Backend API base URL (the backend proxies AI provider calls)
         buildConfigField(
-            "String", "OPENAI_API_KEY",
-            "\"${localProps.getProperty("OPENAI_API_KEY", "")}\""
+            "String", "BASE_URL",
+            "\"${localProps.getProperty("BASE_URL", "https://api.example.com/")}\""
         )
 
-        // OpenAI base URL
-        buildConfigField(
-            "String", "OPENAI_BASE_URL",
-            "\"https://api.openai.com/v1/\""
-        )
-
-        // OpenAI model used across the app
+        // OpenAI model identifier forwarded to backend proxy
         buildConfigField("String", "OPENAI_MODEL", "\"gpt-4.1-mini\"")
 
         // Stripe publishable key (client-safe)

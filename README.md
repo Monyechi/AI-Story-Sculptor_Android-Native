@@ -39,6 +39,8 @@ Notes:
 
 - Keep trailing slash (the build script also normalizes it).
 - This value is exposed as `BuildConfig.BASE_URL`.
+- Do **not** add `OPENAI_API_KEY` to Android `local.properties`; AI provider credentials are backend-only.
+- Backend env template for secure secrets: `backend/.env.example`.
 
 ## Current Features
 

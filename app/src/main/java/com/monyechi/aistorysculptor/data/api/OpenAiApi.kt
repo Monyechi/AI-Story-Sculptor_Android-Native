@@ -4,17 +4,18 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 /**
- * Retrofit interface for the OpenAI REST API.
- * Base URL: https://api.openai.com/v1/
- * Auth header added via [OpenAiInterceptor].
+ * Retrofit interface for backend-owned AI proxy endpoints.
+ *
+ * Base URL: backend API root (`BuildConfig.BASE_URL`).
+ * The backend handles provider authentication and request forwarding.
  */
 interface OpenAiApi {
 
-    /** Chat completions — used for text generation (summaries, chapters, characters). */
-    @POST("chat/completions")
+    /** Chat completions proxy — used for text generation (summaries, chapters, characters). */
+    @POST("api/v1/mobile/ai/chat/completions/")
     suspend fun chatCompletion(@Body request: ChatCompletionRequest): ChatCompletionResponse
 
-    /** Image generation — used for cover art (gpt-image-1). */
-    @POST("images/generations")
+    /** Image generation proxy — used for cover art generation. */
+    @POST("api/v1/mobile/ai/images/generations/")
     suspend fun generateImage(@Body request: ImageGenerationRequest): ImageGenerationResponse
 }
