@@ -39,6 +39,9 @@ class CreateBookViewModel @Inject constructor(
     private val _createState = MutableStateFlow<UiState<Book>?>(null)
     val createState: StateFlow<UiState<Book>?> = _createState.asStateFlow()
 
+    private val _summaryState = MutableStateFlow<UiState<String>?>(null)
+    val summaryState: StateFlow<UiState<String>?> = _summaryState.asStateFlow()
+
     fun updateTitle(value: String) { _formState.value = _formState.value.copy(title = value) }
     fun updateAuthor(value: String) { _formState.value = _formState.value.copy(author = value) }
     fun updateBookType(value: String) { _formState.value = _formState.value.copy(bookType = value) }
@@ -50,16 +53,17 @@ class CreateBookViewModel @Inject constructor(
 
     fun generateSummary() {
         viewModelScope.launch {
-            // TODO: Implement API call to generate summary based on book details
-            // For now, create a simple placeholder summary
             val form = _formState.value
-            val generatedSummary = """
-                A ${form.genre.ifBlank { "captivating" }} ${form.bookType.replace("-", " ")} written in ${form.pov.ifBlank { "an engaging" }} perspective.
-                
-                [Auto-generated summary will be created based on your book details once the backend API is implemented]
-            """.trimIndent()
-            
-            _formState.value = _formState.value.copy(summary = generatedSummary)
+            val validationError = validateSummaryGeneration(form)
+            if (validationError != null) {
+                _summaryState.value = UiState.Error(validationError)
+                return@launch
+            }
+
+            _summaryState.value = UiState.Loading
+            _summaryState.value = UiState.Error(
+                "Auto-generated summaries are temporarily unavailable. Please enter a summary manually."
+            )
         }
     }
 
@@ -82,6 +86,12 @@ class CreateBookViewModel @Inject constructor(
             }
 
             val form = _formState.value
+            val submitValidationError = validateSummaryGeneration(form)
+            if (submitValidationError != null) {
+                _createState.value = UiState.Error(submitValidationError)
+                return@launch
+            }
+
             val request = CreateBookRequest(
                 title = form.title,
                 author = form.author,
@@ -108,5 +118,18 @@ class CreateBookViewModel @Inject constructor(
 
     fun clearState() {
         _createState.value = null
+    }
+
+    fun clearSummaryState() {
+        _summaryState.value = null
+    }
+
+    private fun validateSummaryGeneration(form: CreateBookFormState): String? {
+        return when {
+            form.title.isBlank() -> "Title is required."
+            form.genre.isBlank() -> "Genre is required."
+            form.bookType.isBlank() -> "Book type is required."
+            else -> null
+        }
     }
 }

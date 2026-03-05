@@ -92,6 +92,7 @@ fun CreateBookScreen(
 ) {
     val formState by viewModel.formState.collectAsStateWithLifecycle()
     val createState by viewModel.createState.collectAsStateWithLifecycle()
+    val summaryState by viewModel.summaryState.collectAsStateWithLifecycle()
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = White,
@@ -233,27 +234,25 @@ fun CreateBookScreen(
                         }
 
                         2 -> {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                FormLabel("Story Summary:")
-                                ForestOutlinedButton(
-                                    text = "Auto Generate",
-                                    onClick = { viewModel.generateSummary() },
-                                    modifier = Modifier,
-                                )
-                            }
+                            FormLabel("Story Summary:")
+                            Text(
+                                text = "Auto-generate is currently unavailable. Please enter a summary manually.",
+                                color = Beige,
+                                fontSize = 13.sp,
+                            )
                             OutlinedTextField(
                                 value = formState.summary,
                                 onValueChange = viewModel::updateSummary,
-                                placeholder = { Text("Click Auto Generate or write your own", color = Beige.copy(alpha = 0.5f)) },
+                                placeholder = { Text("Write a short story summary", color = Beige.copy(alpha = 0.5f)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = fieldColors,
                                 minLines = 5,
                             )
+
+                            if (summaryState is UiState.Error) {
+                                Text((summaryState as UiState.Error).message, color = DangerRed, fontSize = 13.sp)
+                            }
                         }
 
                         else -> {
