@@ -5,6 +5,12 @@
 
 Native Android client for the existing Django backend, built with Kotlin + Jetpack Compose.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshot_login.png" alt="Login Screen" width="280"/>
+</p>
+
 ## Tech Stack
 
 - Kotlin + Jetpack Compose (Material 3)
